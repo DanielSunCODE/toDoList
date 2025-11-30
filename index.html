@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Pantalla de login -->
+    <div id="loginScreen" class="container">
+        <h1>Iniciar Sesión</h1>
+        <form id="loginForm">
+            <input type="text" id="usernameInput" placeholder="Usuario" required>
+            <input type="password" id="passwordInput" placeholder="Contraseña" required>
+            <button type="submit">Entrar</button>
+        </form>
+        <p><a href="#" onclick="showRegister()">¿No tienes cuenta? Regístrate</a></p>
+    </div>
+
+    <!-- Pantalla de registro -->
+    <div id="registerScreen" class="container" style="display: none;">
+        <h1>Registro</h1>
+        <form id="registerForm">
+            <input type="text" id="regUsernameInput" placeholder="Usuario" required>
+            <input type="password" id="regPasswordInput" placeholder="Contraseña" required>
+            <button type="submit">Registrarse</button>
+        </form>
+        <p><a href="#" onclick="showLogin()">¿Ya tienes cuenta? Inicia sesión</a></p>
+    </div>
+
+    <!-- Pantalla principal de tareas -->
+    <div id="todoScreen" class="container" style="display: none;">
+        <div class="header">
+            <h1>Todo List</h1>
+            <div class="user-info">
+                <span id="currentUser"></span>
+                <button onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+        
+        <!-- Formulario para agregar tareas -->
+        <form id="taskForm">
+            <input type="text" id="taskInput" placeholder="Nueva tarea..." required>
+            <button type="submit">Agregar</button>
+        </form>
+
+        <!-- Controles de filtro y búsqueda -->
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Buscar tareas...">
+            <select id="statusFilter">
+                <option value="all">Todas</option>
+                <option value="pending">Pendientes</option>
+                <option value="completed">Completadas</option>
+            </select>
+        </div>
+
+        <!-- Lista de tareas -->
+        <ul id="taskList"></ul>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

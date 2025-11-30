@@ -1,8 +1,23 @@
 // Variables globales
 let tasks = [];
-let editingTaskId = null;
 let currentUser = null;
-let users = JSON.parse(localStorage.getItem('todoUsers')) || [];
+let editingTaskId = null;
+
+// Usuario hardcodeado para pruebas
+const hardcodedUser = {
+    id: 1,
+    username: 'admin',
+    password: '123',
+    tasks: [
+        { id: 1, text: 'Tarea de ejemplo 1', description: 'Esta es una descripción de ejemplo', status: 'sin iniciar' },
+        { id: 2, text: 'Tarea completada', description: 'Tarea que ya fue terminada', status: 'terminada' },
+        { id: 3, text: 'Otra tarea pendiente', description: '', status: 'en progreso' }
+    ]
+};
+
+// Limpiar localStorage para usar datos corregidos
+localStorage.removeItem('todoUsers');
+let users = JSON.parse(localStorage.getItem('todoUsers')) || [hardcodedUser];
 
 // Elementos del DOM
 const loginScreen = document.getElementById('loginScreen');
@@ -12,15 +27,27 @@ const loginForm = document.getElementById('loginForm');
 const registerForm = document.getElementById('registerForm');
 const taskForm = document.getElementById('taskForm');
 const taskInput = document.getElementById('taskInput');
+const taskDescription = document.getElementById('taskDescription');
+const taskStatus = document.getElementById('taskStatus');
 const taskList = document.getElementById('taskList');
 const searchInput = document.getElementById('searchInput');
 const statusFilter = document.getElementById('statusFilter');
 const currentUserSpan = document.getElementById('currentUser');
+const editModal = document.getElementById('editModal');
+const editForm = document.getElementById('editForm');
+const editTitle = document.getElementById('editTitle');
+const editDescription = document.getElementById('editDescription');
+const editStatus = document.getElementById('editStatus');
+const viewModal = document.getElementById('viewModal');
+const viewTitle = document.getElementById('viewTitle');
+const viewDescription = document.getElementById('viewDescription');
+const viewStatus = document.getElementById('viewStatus');
 
 // Event listeners
 loginForm.addEventListener('submit', login);
 registerForm.addEventListener('submit', register);
 taskForm.addEventListener('submit', addTask);
+editForm.addEventListener('submit', saveTaskEdit);
 searchInput.addEventListener('input', filterTasks);
 statusFilter.addEventListener('change', filterTasks);
 
@@ -110,16 +137,21 @@ function saveUserTasks() {
 function addTask(e) {
     e.preventDefault();
     const text = taskInput.value.trim();
+    const description = taskDescription.value.trim();
+    const status = taskStatus.value;
     if (!text) return;
 
     const task = {
         id: Date.now(),
         text: text,
-        completed: false
+        description: description,
+        status: status
     };
 
     tasks.push(task);
     taskInput.value = '';
+    taskDescription.value = '';
+    taskStatus.value = 'sin iniciar';
     saveUserTasks();
     renderTasks();
 }
@@ -131,13 +163,15 @@ function renderTasks() {
 
     filteredTasks.forEach(task => {
         const li = document.createElement('li');
-        li.className = `task-item ${task.completed ? 'completed' : ''}`;
+        const taskStatus = task.status || 'sin iniciar';
+        li.className = `task-item ${taskStatus === 'terminada' ? 'completed' : ''}`;
         li.innerHTML = `
-            <input type="checkbox" ${task.completed ? 'checked' : ''} 
-                   onchange="toggleTask(${task.id})">
-            <span class="task-text" ondblclick="editTask(${task.id})">${task.text}</span>
+            <div class="task-content" onclick="openViewModal(${task.id})">
+                <div class="task-title">${task.text} <span class="task-status ${taskStatus.replace(' ', '-')}">${taskStatus.toUpperCase()}</span></div>
+                ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+            </div>
             <div class="task-actions">
-                <button class="btn-edit" onclick="editTask(${task.id})">Editar</button>
+                <button class="btn-edit" onclick="openEditModal(${task.id})">Editar</button>
                 <button class="btn-delete" onclick="deleteTask(${task.id})">Eliminar</button>
             </div>
         `;
@@ -145,63 +179,64 @@ function renderTasks() {
     });
 }
 
-// Función para alternar estado de tarea
-function toggleTask(id) {
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-        task.completed = !task.completed;
-        saveUserTasks();
-        renderTasks();
-    }
-}
-
-// Función para editar tarea
-function editTask(id) {
+// Función para abrir modal de edición
+function openEditModal(id) {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    const taskItem = event.target.closest('.task-item');
-    const taskText = taskItem.querySelector('.task-text');
-    
-    if (editingTaskId === id) {
-        // Guardar cambios
-        const input = taskItem.querySelector('.edit-input');
-        const newText = input.value.trim();
-        if (newText) {
-            task.text = newText;
-            editingTaskId = null;
-            renderTasks();
-        }
-    } else {
-        // Entrar en modo edición
-        editingTaskId = id;
-        taskText.innerHTML = `<input type="text" class="edit-input" value="${task.text}" onblur="saveEdit(${id})" onkeypress="handleEditKeypress(event, ${id})">`;
-        taskItem.querySelector('.edit-input').focus();
-    }
+    editingTaskId = id;
+    editTitle.value = task.text;
+    editDescription.value = task.description || '';
+    editStatus.value = task.status;
+    editModal.style.display = 'block';
 }
 
-// Función para guardar edición
-function saveEdit(id) {
-    const task = tasks.find(t => t.id === id);
-    const input = document.querySelector('.edit-input');
-    if (task && input) {
-        const newText = input.value.trim();
-        if (newText) {
-            task.text = newText;
-        }
-        editingTaskId = null;
+// Función para cerrar modal
+function closeEditModal() {
+    editModal.style.display = 'none';
+    editingTaskId = null;
+}
+
+// Función para guardar edición desde modal
+function saveTaskEdit(e) {
+    e.preventDefault();
+    if (!editingTaskId) return;
+
+    const task = tasks.find(t => t.id === editingTaskId);
+    if (task) {
+        task.text = editTitle.value.trim();
+        task.description = editDescription.value.trim();
+        task.status = editStatus.value;
         saveUserTasks();
         renderTasks();
+        closeEditModal();
     }
 }
 
-// Función para manejar teclas en edición
-function handleEditKeypress(event, id) {
-    if (event.key === 'Enter') {
-        saveEdit(id);
-    } else if (event.key === 'Escape') {
-        editingTaskId = null;
-        renderTasks();
+// Función para abrir modal de vista
+function openViewModal(id) {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+
+    viewTitle.textContent = task.text;
+    viewStatus.textContent = task.status.toUpperCase();
+    viewStatus.className = `view-status ${task.status.replace(' ', '-')}`;
+    viewDescription.textContent = task.description || 'Sin descripción';
+    viewModal.style.display = 'block';
+}
+
+// Función para cerrar modal de vista
+function closeViewModal() {
+    viewModal.style.display = 'none';
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    if (event.target === editModal) {
+        closeEditModal();
+    }
+    if (event.target === viewModal) {
+        closeViewModal();
     }
 }
 
@@ -227,16 +262,15 @@ function getFilteredTasks() {
     const searchTerm = searchInput.value.toLowerCase();
     if (searchTerm) {
         filtered = filtered.filter(task => 
-            task.text.toLowerCase().includes(searchTerm)
+            task.text.toLowerCase().includes(searchTerm) ||
+            (task.description && task.description.toLowerCase().includes(searchTerm))
         );
     }
 
     // Filtrar por estado
     const status = statusFilter.value;
-    if (status === 'completed') {
-        filtered = filtered.filter(task => task.completed);
-    } else if (status === 'pending') {
-        filtered = filtered.filter(task => !task.completed);
+    if (status !== 'all') {
+        filtered = filtered.filter(task => task.status === status);
     }
 
     return filtered;

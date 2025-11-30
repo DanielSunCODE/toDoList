@@ -10,6 +10,9 @@
     <!-- Pantalla de login -->
     <div id="loginScreen" class="container">
         <h1>Iniciar Sesión</h1>
+        <div class="demo-credentials">
+            <p><strong>Usuario de prueba:</strong> admin | <strong>Contraseña:</strong> 123</p>
+        </div>
         <form id="loginForm">
             <input type="text" id="usernameInput" placeholder="Usuario" required>
             <input type="password" id="passwordInput" placeholder="Contraseña" required>
@@ -41,7 +44,17 @@
         
         <!-- Formulario para agregar tareas -->
         <form id="taskForm">
-            <input type="text" id="taskInput" placeholder="Nueva tarea..." required>
+            <div class="form-group">
+                <div class="input-row">
+                    <input type="text" id="taskInput" placeholder="Título de la tarea..." required>
+                    <select id="taskStatus">
+                        <option value="sin iniciar">Sin Iniciar</option>
+                        <option value="en progreso">En Progreso</option>
+                        <option value="terminada">Terminada</option>
+                    </select>
+                </div>
+                <textarea id="taskDescription" placeholder="Descripción (opcional)..." rows="3"></textarea>
+            </div>
             <button type="submit">Agregar</button>
         </form>
 
@@ -50,13 +63,45 @@
             <input type="text" id="searchInput" placeholder="Buscar tareas...">
             <select id="statusFilter">
                 <option value="all">Todas</option>
-                <option value="pending">Pendientes</option>
-                <option value="completed">Completadas</option>
+                <option value="sin iniciar">Sin Iniciar</option>
+                <option value="en progreso">En Progreso</option>
+                <option value="terminada">Terminada</option>
             </select>
         </div>
 
         <!-- Lista de tareas -->
         <ul id="taskList"></ul>
+    </div>
+
+    <!-- Modal de edición -->
+    <div id="editModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Editar Tarea</h2>
+            <form id="editForm">
+                <input type="text" id="editTitle" placeholder="Título" required>
+                <textarea id="editDescription" placeholder="Descripción" rows="3"></textarea>
+                <select id="editStatus">
+                    <option value="sin iniciar">Sin Iniciar</option>
+                    <option value="en progreso">En Progreso</option>
+                    <option value="terminada">Terminada</option>
+                </select>
+                <div class="modal-buttons">
+                    <button type="submit">Guardar</button>
+                    <button type="button" onclick="closeEditModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de vista de tarea -->
+    <div id="viewModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeViewModal()">&times;</span>
+            <h2 id="viewTitle"></h2>
+            <div class="view-status" id="viewStatus"></div>
+            <div class="view-description" id="viewDescription"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>
